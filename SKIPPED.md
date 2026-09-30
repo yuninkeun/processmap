@@ -2,9 +2,17 @@
 
 | 일시 | 항목 | 이유 | 다시 하려면 |
 |---|---|---|---|
-| 2026-09-30 | Part 5 STEP 1 — GitHub public 저장소 생성 + Vercel 배포(공개 URL) | `.env`에 `GITHUB_TOKEN`·`VERCEL_TOKEN`이 없음 (런북 규칙: 배포 키 없으면 이 STEP만 건너뜀). 로컬 git 저장소·초기 커밋까지만 준비함 | `.env`에 두 토큰을 넣고 `DEPLOY.md`의 절차대로 실행 |
-| 2026-09-30 | Part 5 STEP 2 — 배포 점검(origin·public URL 200·Vercel 환경변수) | STEP 1을 건너뛰어 점검 대상이 없음. 체크리스트는 `DEPLOY.md`에 준비함 | 배포 후 `DEPLOY.md` 체크리스트 수행 |
+| 2026-09-30 | ~~Part 5 STEP 1 — GitHub public 저장소 생성 + Vercel 배포~~ | ~~토큰 없어 건너뜀~~ → **2026-09-30 완료**: `github.com/yuninkeun/processmap` (public), Vercel 배포 완료 | — |
+| 2026-09-30 | ~~Part 5 STEP 2 — 배포 점검~~ | ~~STEP 1 미실시~~ → **2026-09-30 완료**: 공개 URL 200 확인, 제목 노출 확인, 배포 보호(Deployment Protection) 해제 완료 | — |
 | 2026-09-30 | 실제 메일 발송 확인 | `.env`에 SMTP 설정이 없어 알림은 발송 대기함(Outbox)에 기록됨 — 기능은 완성, 실발송만 미확인 | `.env`에 `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM` 추가 |
+
+## 배포 정보 (2026-09-30 완료)
+
+- **공개 URL**: https://processmap-nine.vercel.app
+- **GitHub**: https://github.com/yuninkeun/processmap
+- **Vercel 프로젝트**: `jeisys2` 팀 소유, 대시보드에서 GitHub 저장소 Import 방식으로 생성 (API 토큰은 팀 접근 권한이 없어 CLI 배포는 실패 — 대시보드 수동 배포로 완료)
+- **주의**: Vercel 프로덕션 환경은 파일시스템 쓰기가 안 되어 `data/db.json` 대신 메모리 저장으로 동작함 — 서버 재시작/재배포 시 데이터가 초기화됨. 지속 저장이 필요하면 별도 DB 연동 필요
+- **주의**: 앱에 로그인이 없어 URL을 아는 사람은 누구나 조회·수정 가능 (의도된 설계 — 사내 링크 공유 전제)
 
 ## 결정 로그 (질문 대신 기본값으로 진행한 것)
 
