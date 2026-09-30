@@ -36,10 +36,8 @@
 2. Vercel 대시보드 → 프로젝트 Settings → Environment Variables에도 동일하게 등록 (로컬 `.env`는 Vercel에 자동 반영 안 됨)
 3. 재배포 후 담당자 배정 테스트해서 실제 메일 도착 확인
 
-### 2. 데이터 영구 저장 전환 (중요도 높음)
-Vercel 프로덕션은 파일시스템 쓰기가 안 돼서 `data/db.json` 대신 **메모리 저장**으로 동작 중입니다. 즉 **서버가 재시작되거나 재배포될 때마다 입력한 프로세스맵 데이터가 전부 초기화**됩니다. 실사용하려면:
-- 가장 간단: Vercel Marketplace에서 Postgres(Neon/Supabase 등) 붙이고 `src/lib/store`를 DB 기반으로 교체 (스택은 Next.js 유지, 저장소 인터페이스만 교체)
-- `DEPLOY.md`에 관련 메모 있음
+### 2. ~~데이터 영구 저장 전환~~ — 코드는 완료, DB 연결만 남음
+`src/lib/server/db.ts`·`store.ts`에 Neon Postgres 연동 코드가 이미 들어가 있습니다 (`DATABASE_URL`이 있으면 자동으로 Postgres 사용, 없으면 기존 파일/메모리로 폴백). **아직 실제 DB를 만들어 연결하지 않았다면** Vercel 대시보드 → `jeisys2/processmap` → Storage 탭 → Postgres(Neon) 생성 → Connect 하면 끝 (자동으로 환경변수 주입됨). 절차는 `DEPLOY.md`의 "영구 저장(Neon Postgres) 프로비저닝" 참고.
 
 ### 3. Vercel 계정/팀 권한 정리 (배경 지식)
 - 이 프로젝트는 `jeisys2`라는 **팀** 소유로 생성됐는데, `.env`의 `VERCEL_TOKEN`은 이 팀에 대한 API 접근 권한이 없음 (팀 조회 시도 시 403).

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { DB, Dept, ProcessMap } from '@/lib/types';
 import { emptyDB } from '@/lib/types';
 
-interface Meta { storage: 'file' | 'memory'; smtp: boolean }
+interface Meta { storage: 'postgres' | 'file' | 'memory'; smtp: boolean }
 
 interface DataCtx {
   db: DB;
