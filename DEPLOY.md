@@ -15,20 +15,21 @@
    npx vercel --prod --yes --token "$VERCEL_TOKEN"     # 토큰은 .env 에서 읽어 환경변수로 전달
    ```
 4. Vercel 환경 변수 등록(앱이 쓰는 값만): `NEXT_PUBLIC_BASE_URL`(공개 URL), 메일을 쓰면 `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM`.
-5. ~~주의: Vercel 은 파일 쓰기가 되지 않아 메모리 저장으로만 동작~~ → **2026-09-30 해결**: Neon Postgres 연동 완료 (아래 "영구 저장(Neon Postgres)" 참고). `DATABASE_URL`이 없으면 기존처럼 파일→메모리로 자동 폴백.
+5. ~~주의: Vercel 은 파일 쓰기가 되지 않아 메모리 저장으로만 동작~~ → **2026-09-30 해결**: Supabase Postgres 연동 완료 (아래 "영구 저장(Supabase Postgres)" 참고). `DATABASE_URL`이 없으면 기존처럼 파일→메모리로 자동 폴백.
 
-## 영구 저장(Neon Postgres) 프로비저닝
+## 영구 저장(Supabase Postgres) 프로비저닝
 
-코드는 이미 준비되어 있음(`src/lib/server/db.ts`, `store.ts`). `DATABASE_URL` 환경변수만 연결하면 자동으로 Postgres를 쓴다.
+코드는 이미 준비되어 있음(`src/lib/server/db.ts`, `store.ts`, 범용 `postgres` 드라이버 사용 — Supabase·Neon 등 어떤 Postgres든 호환). `DATABASE_URL` 환경변수만 연결하면 자동으로 Postgres를 쓴다.
 
-1. Vercel 대시보드 → `jeisys2/processmap` 프로젝트 → **Storage** 탭 → **Create Database** → **Postgres (Neon)** 선택 → 리전은 서울(가까운 곳) 또는 기본값
-2. 프로젝트에 **Connect**하면 `DATABASE_URL`이 Production·Preview·Development 환경변수에 자동 등록됨 (Vercel이 자동으로 함 — 수동 설정 불필요)
-3. 다음 배포(또는 재배포)부터 자동으로 Postgres 사용. 최초 접근 시 `app_store` 테이블을 코드가 알아서 생성함(마이그레이션 파일 불필요, 스키마가 단순한 JSON 한 문서라 자동 생성으로 충분)
-4. 로컬에서도 Postgres로 테스트하려면: Storage 탭에서 연결 문자열 복사 → `processmap/.env`에 `DATABASE_URL=...` 추가. 안 넣으면 로컬은 계속 `data/db.json` 파일로 동작(정상)
-5. **CLI로 `vercel integration add neon` 시도 시 주의**: 이 프로젝트의 `VERCEL_TOKEN`은 `jeisys2` 팀 접근 권한이 없어 CLI가 막힘(`SKIPPED.md` 참고). 위 1~2번처럼 **대시보드에서 직접** 진행해야 함.
+1. supabase.com 대시보드 → **New project** → processmap 전용 프로젝트 생성 (리전은 가까운 곳)
+2. 생성 후 **Project Settings → Database → Connection string** 에서 **"Session pooler"**(포트 6543, `pgbouncer` 사용) 연결 문자열 복사 — 서버리스 환경에는 이 풀러 연결을 써야 함(Direct connection 아님)
+3. Vercel 대시보드 → `jeisys2/processmap` 프로젝트 → **Settings → Environment Variables** → `DATABASE_URL`에 위 연결 문자열 붙여넣기 (Production·Preview·Development 모두 체크) → Save
+4. 재배포하면(또는 다음 push부터) 자동으로 Postgres 사용. 최초 접근 시 `processmap_store` 테이블을 코드가 알아서 생성함(마이그레이션 파일 불필요, 스키마가 단순한 JSON 한 문서라 자동 생성으로 충분)
+5. 로컬에서도 Postgres로 테스트하려면: 같은 연결 문자열을 `processmap/.env`의 `DATABASE_URL=...`에 추가. 안 넣으면 로컬은 계속 `data/db.json` 파일로 동작(정상)
+6. **참고**: `.env`에 있던 옛 `SUPABASE_ACCESS_TOKEN`(Management API 토큰)은 만료/무효 상태(401)라 API로 프로젝트 자동 생성은 불가 — 대시보드에서 직접 생성 필요.
 
 ### 저장 방식
-- 관계형 테이블이 아니라 `app_store(key, value jsonb, rev)` 한 행에 앱 전체 데이터(부서·맵·알림)를 JSON으로 저장 — 기존 파일 저장 방식과 동일한 구조를 그대로 DB로 옮긴 것. 동시 쓰기는 `rev` 값 비교(낙관적 동시성 제어)로 충돌을 감지하고 최대 5회 재시도.
+- 관계형 테이블이 아니라 `processmap_store(key, value jsonb, rev)` 한 행에 앱 전체 데이터(부서·맵·알림)를 JSON으로 저장 — 기존 파일 저장 방식과 동일한 구조를 그대로 DB로 옮긴 것. 동시 쓰기는 `rev` 값 비교(낙관적 동시성 제어)로 충돌을 감지하고 최대 5회 재시도.
 - 데이터가 커지거나(다부서·다수 사용자 동시 편집) 진짜 관계형 스키마가 필요해지면, 그때 `depts`/`maps`/`notices`를 별도 테이블로 분리하는 리팩토링을 고려.
 
 ## 배포 점검표

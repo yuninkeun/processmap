@@ -6,7 +6,7 @@
 ## 프로젝트 개요
 
 - **앱 이름**: processmap — 업무 프로세스맵을 정의하고 실행·판단·모니터링을 전산으로 수행
-- **스택**: Next.js(App Router) + TypeScript + Tailwind CSS · 저장소는 `DATABASE_URL`이 있으면 Neon Postgres, 없으면 `data/db.json`(파일)로 자동 폴백 · 메일은 nodemailer
+- **스택**: Next.js(App Router) + TypeScript + Tailwind CSS · 저장소는 `DATABASE_URL`이 있으면 Postgres(Supabase), 없으면 `data/db.json`(파일)로 자동 폴백 · 메일은 nodemailer
 - **배포**: Vercel
 - **로그인**: 없음 (사내 공유 링크로 사용)
 
@@ -22,7 +22,7 @@ processmap/
 │  └─ notifications/   메일 알림 내역
 ├─ src/components/     화면 조각(사이드바·캔버스·인스펙터·모달 등)
 ├─ src/lib/            타입·레이아웃·검증 공통 코드
-│  └─ server/          store.ts(저장소, Postgres/파일 자동 분기)·db.ts(Neon 지연 초기화)·mail.ts·notify.ts
+│  └─ server/          store.ts(저장소, Postgres/파일 자동 분기)·db.ts(Postgres 지연 초기화, postgres.js)·mail.ts·notify.ts
 ├─ data/db.json        로컬 데이터 (DATABASE_URL 없을 때만 사용, git 커밋 안 함)
 └─ PRD.md PLAN.md DESIGN.md CHECK.md CLAUDE.md
 ```

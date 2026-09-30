@@ -1,4 +1,4 @@
-// 저장소 (서버 전용). DATABASE_URL 이 있으면 Neon Postgres에 영구 저장하고,
+// 저장소 (서버 전용). DATABASE_URL 이 있으면 Postgres(Supabase 등)에 영구 저장하고,
 // 없으면 data/db.json 파일에 저장하되 쓰기가 불가능한 환경(Vercel 등)이면 메모리 저장으로 전환한다.
 import 'server-only';
 import { promises as fs } from 'fs';
@@ -25,7 +25,7 @@ async function mutatePg<T>(fn: (db: DB) => T | Promise<T>): Promise<T> {
   await ensureTable();
   const sql = getSql();
   for (let attempt = 0; attempt < 5; attempt++) {
-    const rows = await sql`select value, rev from app_store where key = ${STORE_KEY}`;
+    const rows = await sql`select value, rev from processmap_store where key = ${STORE_KEY}`;
     const row = rows[0] as { value: unknown; rev: number } | undefined;
     const db = normalize((row?.value as Partial<DB>) ?? null);
     const rev = row?.rev ?? 0;
@@ -35,20 +35,20 @@ async function mutatePg<T>(fn: (db: DB) => T | Promise<T>): Promise<T> {
     if (rev === 0) {
       // 최초 저장
       await sql`
-        insert into app_store (key, value, rev, updated_at)
+        insert into processmap_store (key, value, rev, updated_at)
         values (${STORE_KEY}, ${JSON.stringify(db)}::jsonb, 1, now())
         on conflict (key) do nothing
       `;
-      const check = await sql`select rev from app_store where key = ${STORE_KEY}`;
+      const check = await sql`select rev from processmap_store where key = ${STORE_KEY}`;
       if ((check[0] as { rev: number } | undefined)?.rev === 1) return result;
       continue; // 동시에 다른 요청이 먼저 insert함 — 재시도
     }
 
     const updated = await sql`
-      update app_store set value = ${JSON.stringify(db)}::jsonb, rev = rev + 1, updated_at = now()
+      update processmap_store set value = ${JSON.stringify(db)}::jsonb, rev = rev + 1, updated_at = now()
       where key = ${STORE_KEY} and rev = ${rev}
     `;
-    if ((updated as unknown as { rowCount?: number }).rowCount ?? 1) return result;
+    if (updated.count > 0) return result;
     // rev 불일치 — 다른 요청이 먼저 씀. 다시 읽어서 재시도.
   }
   throw new Error('저장 충돌이 반복돼 반영하지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -57,7 +57,7 @@ async function mutatePg<T>(fn: (db: DB) => T | Promise<T>): Promise<T> {
 async function readDBPg(): Promise<DB> {
   await ensureTable();
   const sql = getSql();
-  const rows = await sql`select value from app_store where key = ${STORE_KEY}`;
+  const rows = await sql`select value from processmap_store where key = ${STORE_KEY}`;
   const row = rows[0] as { value: unknown } | undefined;
   return normalize((row?.value as Partial<DB>) ?? null);
 }

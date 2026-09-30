@@ -37,7 +37,7 @@
 3. 재배포 후 담당자 배정 테스트해서 실제 메일 도착 확인
 
 ### 2. ~~데이터 영구 저장 전환~~ — 코드는 완료, DB 연결만 남음
-`src/lib/server/db.ts`·`store.ts`에 Neon Postgres 연동 코드가 이미 들어가 있습니다 (`DATABASE_URL`이 있으면 자동으로 Postgres 사용, 없으면 기존 파일/메모리로 폴백). **아직 실제 DB를 만들어 연결하지 않았다면** Vercel 대시보드 → `jeisys2/processmap` → Storage 탭 → Postgres(Neon) 생성 → Connect 하면 끝 (자동으로 환경변수 주입됨). 절차는 `DEPLOY.md`의 "영구 저장(Neon Postgres) 프로비저닝" 참고.
+`src/lib/server/db.ts`·`store.ts`에 Postgres 연동 코드가 이미 들어가 있습니다 (`DATABASE_URL`이 있으면 자동으로 Postgres 사용, 없으면 기존 파일/메모리로 폴백. 범용 `postgres` 드라이버라 Supabase·Neon 등 어디든 호환). **processmap 전용 Supabase 프로젝트를 새로 만들어 연결하기로 결정함** — supabase.com에서 프로젝트 생성 → Session pooler 연결 문자열을 Vercel 프로젝트의 `DATABASE_URL` 환경변수에 등록. 절차는 `DEPLOY.md`의 "영구 저장(Supabase Postgres) 프로비저닝" 참고.
 
 ### 3. Vercel 계정/팀 권한 정리 (배경 지식)
 - 이 프로젝트는 `jeisys2`라는 **팀** 소유로 생성됐는데, `.env`의 `VERCEL_TOKEN`은 이 팀에 대한 API 접근 권한이 없음 (팀 조회 시도 시 403).
